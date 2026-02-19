@@ -1,1 +1,48 @@
+#imports
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+#imports from files (moeten nog aangepast worden)
+v=1
+T_water =1
+T_air = 1
+a = 0.5 #assumption, see literature
+b=0.1 #assumption, see literature
+H_solar = 1 #KNMI input use hourly data for solar radiation, convert to W/m2
+
 #variables
+v_wind = 3.68+2.65*v
+P_a = 6.112*10**(7.5*T_air/(237.3+T_air)) #saturation vapor pressure
+P_s = 23.4*1.062**(T_water-20) #saturation vapor pressure at water temperature
+sb = 5.67 * 10**-8 #Stefan-Boltzmann constant
+epsilon = a+b*np.sqrt(P_a) #emissivity of water #a en b uit literature
+k = 1.4 #thermal conductivity of the saturated clay
+d = 0.1 #depth of the ground layer
+T_ground = 12 #temperature of the ground layer
+
+#proportions of the lake
+surface_area = 1911 #m2
+average_depth = 0.9763 #m2
+
+volume = surface_area * average_depth
+
+#formula for heat flux
+H_solar #KNMI input use hourly data for solar radiation, convert to W/m2
+H_atmospheric = epsilon * sb*(T_air+273.15)**4
+H_backradiation = -epsilon * sb*(T_water+273.15)**4
+H_conduction = (2.02+1.46*v_wind) * (T_air-T_water)
+H_evaporation = v_wind*(P_s-P_a)
+H_groundflux = k/d * (T_water - T_ground) #assumptions see above: T_ground assumed constant, d = 0.1, k = 1.4 W/mK
+
+H_total = H_solar + H_atmospheric + H_backradiation + H_conduction + H_evaporation + H_groundflux
+
+#graphs
+#heatflux per hour over the year
+plt.plot(H_total)
+plt.xlabel('Time (hours)')
+plt.ylabel('Total Heat Flux (W/m2)')    
+plt.title('Total Heat Flux over Time')
+plt.show()
+
+
