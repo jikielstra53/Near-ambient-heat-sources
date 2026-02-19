@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 v=1
 T_water =1
 T_air = 1
+Data = pd.read_excel(Bathymetry data points.xlsx,"Weather data formatted")
+v = Data['wind 1 m/s']
+T_air = Data['T in C']
+H_solar = Data['[W/m^2]']
 a = 0.5 #assumption, see literature
 b=0.1 #assumption, see literature
 H_solar = 1 #KNMI input use hourly data for solar radiation, convert to W/m2
@@ -19,7 +23,7 @@ sb = 5.67 * 10**-8 #Stefan-Boltzmann constant
 epsilon = a+b*np.sqrt(P_a) #emissivity of water #a en b uit literature
 k = 1.4 #thermal conductivity of the saturated clay
 d = 0.1 #depth of the ground layer
-T_ground = 12 #temperature of the ground layer
+T_ground = 12 #temperature of the ground layer, assumption
 
 #proportions of the lake
 surface_area = 1911 #m2
