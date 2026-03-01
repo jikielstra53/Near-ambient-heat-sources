@@ -1,0 +1,62 @@
+#imports
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+#imports from files (moeten nog aangepast worden)
+Data = pd.read_excel('Bathymetry data points.xlsx',"Weather data formatted")
+v = Data['wind 1 m/s']
+T_air = Data['T in C']
+H_solar = Data['[W/m^2]']
+T_water = Data['Twater']
+a = 0.5 #assumption, see literature
+b=0.1 #assumption, see literature
+
+#variables
+v_wind = 3.68+2.65*v
+P_a = 6.112*10**(7.5*T_air/(237.3+T_air)) #saturation vapor pressure
+P_s = 23.4*1.062**(T_water-20) #saturation vapor pressure at water temperature
+sb = 5.67 * 10**-8 #Stefan-Boltzmann constant
+epsilon = a+b*np.sqrt(P_a) #emissivity of water #a en b uit literature
+k = 1.4 #thermal conductivity of the saturated clay
+d = 0.1 #depth of the ground layer
+T_ground = 12 #temperature of the ground layer, assumption
+
+#proportions of the lake
+surface_area = 1911 #m2
+average_depth = 0.9763 #m2
+
+volume = surface_area * average_depth
+
+# 1. Define a function with the CORRECTED thermodynamic signs
+def calculate_net_flux(T_w):
+    P_s = 23.4 * 1.062**(T_w - 20)
+    H_atm = 0.97 * sb * (T_air + 273.15)**4  # Using 0.97 for water emissivity
+    H_back = -0.97 * sb * (T_w + 273.15)**4  # Negative (radiating heat away)
+    H_cond = (2.02 + 1.46 * v_wind) * (T_air - T_w) 
+    H_evap = -v_wind * (P_s - P_a)   # Negative (evaporation cools water)
+    H_ground = -(k / d) * (T_w - T_ground)   # Negative if water is warmer than ground
+
+    H_total_m2 = H_solar + H_atm + H_back + H_cond + H_evap + H_ground
+    return H_total_m2 * surface_area
+
+
+temperature_drops = [1, 2, 5]
+plt.figure(figsize=(12, 6))
+H_baseline = calculate_net_flux(T_water)
+
+for delta in temperature_drops:
+    T_water_cooled = T_water - delta
+    H_cooled = calculate_net_flux(T_water_cooled)
+    P_extractable = H_cooled - H_baseline
+    total_energy_GJ = np.sum(P_extractable) * 3600 / 1e9
+    
+    plt.plot(P_extractable / 1000, label=f'{delta}°C drop (Total Yield: {total_energy_GJ:.1f} GJ)')
+
+plt.xlabel('Time (hours)')
+plt.ylabel('Extractable Power (Kilowatts)') 
+plt.title('Extractable Power for Different Temperature Drops')
+plt.legend()
+plt.axhline(0, color='black', linewidth=0.8, linestyle='--') 
+plt.grid(True, alpha=0.3)
+plt.show()
